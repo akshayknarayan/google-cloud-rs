@@ -10,6 +10,7 @@ use crate::pubsub::{Client, Error, Message};
 pub struct SubscriptionConfig {
     pub(crate) ack_deadline_duration: Duration,
     pub(crate) message_retention_duration: Option<Duration>,
+    pub(crate) enable_message_ordering: bool,
     pub(crate) labels: HashMap<String, String>,
 }
 
@@ -23,6 +24,12 @@ impl SubscriptionConfig {
     /// Enable message retention and set its duration.
     pub fn retain_messages(mut self, duration: Duration) -> SubscriptionConfig {
         self.message_retention_duration = Some(duration);
+        self
+    }
+
+    /// Enable message ordering for this subscription (off by default).
+    pub fn enable_message_ordering(mut self) -> SubscriptionConfig {
+        self.enable_message_ordering = true;
         self
     }
 
@@ -42,6 +49,7 @@ impl Default for SubscriptionConfig {
         SubscriptionConfig {
             ack_deadline_duration: Duration::seconds(10),
             message_retention_duration: None,
+            enable_message_ordering: false,
             labels: HashMap::new(),
         }
     }

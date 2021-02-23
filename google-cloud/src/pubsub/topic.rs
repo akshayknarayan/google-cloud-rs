@@ -25,6 +25,31 @@ impl Default for TopicConfig {
     }
 }
 
+/// A message to publish on a topic.
+pub struct PublishMessage<T> {
+    data: T,
+    ordering_key: Option<String>,
+}
+
+impl<T> From<T> for PublishMessage<T> {
+    fn from(data: T) -> Self {
+        Self {
+            data,
+            ordering_key: None,
+        }
+    }
+}
+
+impl<T> PublishMessage<T> {
+    /// Set the ordering key. The default is an empty string.
+    pub fn with_ordering_key(self, ordering_key: impl Into<String>) -> Self {
+        Self {
+            ordering_key: Some(ordering_key.into()),
+            ..self
+        }
+    }
+}
+
 /// Represents a topic.
 #[derive(Clone)]
 pub struct Topic {
@@ -67,7 +92,7 @@ impl Topic {
                 prost_types::Duration { seconds, nanos }
             }),
             labels: config.labels,
-            enable_message_ordering: false,
+            enable_message_ordering: config.enable_message_ordering,
             push_config: None,
             expiration_policy: None,
             dead_letter_policy: None,
@@ -80,14 +105,26 @@ impl Topic {
     }
 
     /// Publish a message onto this topic.
-    pub async fn publish(&mut self, data: impl Into<Vec<u8>>) -> Result<(), Error> {
+    ///
+    /// ```no_run
+    /// # let topic: google_cloud::pubsub::Topic = unimplemented!();
+    /// topic.publish(vec![0u8; 10]);
+    /// use google_cloud::pubsub::PublishMessage;
+    /// topic.publish::<_, Vec<u8>>(PublishMessage::from(vec![0u8; 10]).with_ordering_key("foo"));
+    /// ```
+    pub async fn publish<I1, I2>(&mut self, data: I1) -> Result<(), Error>
+    where
+        I1: Into<PublishMessage<I2>>,
+        I2: Into<Vec<u8>>,
+    {
+        let PublishMessage { data, ordering_key } = data.into();
         let request = api::PublishRequest {
             topic: self.name.clone(),
             messages: vec![api::PubsubMessage {
                 data: data.into(),
                 attributes: HashMap::new(),
                 message_id: String::new(),
-                ordering_key: String::new(),
+                ordering_key: ordering_key.unwrap_or_else(String::new),
                 publish_time: None,
             }],
         };
