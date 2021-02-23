@@ -35,6 +35,7 @@ async fn setup_client() -> Result<pubsub::Client, pubsub::Error> {
 async fn pubsub_lists_topics() {
     //? Setup test client.
     let mut client = assert_ok!(setup_client().await);
+    println!("client ok");
 
     //? List all topics of the project.
     assert_ok!(client.topics().await);
