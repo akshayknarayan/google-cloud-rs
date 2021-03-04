@@ -94,6 +94,7 @@ impl Subscription {
                         timestamp.seconds,
                         timestamp.nanos as u32,
                     ),
+                    ordering_key: message.ordering_key,
                 };
                 break Some(message);
             } else {

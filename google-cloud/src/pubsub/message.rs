@@ -13,6 +13,7 @@ pub struct Message {
     pub(crate) message_id: String,
     pub(crate) publish_time: chrono::NaiveDateTime,
     pub(crate) subscription_name: String,
+    pub(crate) ordering_key: String,
 }
 
 impl Message {
@@ -26,6 +27,11 @@ impl Message {
         self.data.as_slice()
     }
 
+    /// The payload data of the message.
+    pub fn take_data(&mut self) -> Vec<u8> {
+        std::mem::take(&mut self.data)
+    }
+
     /// The attributes of the message.
     pub fn attributes(&self) -> &HashMap<String, String> {
         &self.attributes
@@ -34,6 +40,16 @@ impl Message {
     /// The publication time of the message.
     pub fn publish_time(&self) -> chrono::NaiveDateTime {
         self.publish_time
+    }
+
+    /// The ordering key of the message.
+    pub fn ordering_key(&self) -> &str {
+        self.ordering_key.as_str()
+    }
+
+    /// The ordering key of the message.
+    pub fn take_ordering_key(&mut self) -> String {
+        std::mem::take(&mut self.ordering_key)
     }
 
     /// Indicate that this client processed or will process the message successfully.
